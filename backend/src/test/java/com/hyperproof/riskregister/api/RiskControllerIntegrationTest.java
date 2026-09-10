@@ -2,6 +2,7 @@ package com.hyperproof.riskregister.api;
 
 import com.hyperproof.riskregister.risk.Risk;
 import com.hyperproof.riskregister.risk.RiskCategory;
+import com.hyperproof.riskregister.risk.Mitigation;
 import com.hyperproof.riskregister.risk.RiskRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -199,5 +200,24 @@ class RiskControllerIntegrationTest {
                 .andExpect(jsonPath("$.mitigationCount").value(1))
                 .andExpect(jsonPath("$.residualScore").value(4))
                 .andExpect(jsonPath("$.residualSeverity").value("LOW"));
+    }
+
+    @Test
+    void listsMitigationsForARisk() throws Exception {
+        Risk risk = new Risk(
+                "Unpatched production systems",
+                "Critical systems may miss security patches.",
+                RiskCategory.SECURITY,
+                "Security team",
+                4,
+                5
+        );
+        risk.addMitigation(new Mitigation("Deploy weekly patching automation.", 5));
+        Risk savedRisk = riskRepository.saveAndFlush(risk);
+
+        mockMvc.perform(get("/api/risks/{id}/mitigations", savedRisk.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].description").value("Deploy weekly patching automation."))
+                .andExpect(jsonPath("$[0].effectiveness").value(5));
     }
 }
