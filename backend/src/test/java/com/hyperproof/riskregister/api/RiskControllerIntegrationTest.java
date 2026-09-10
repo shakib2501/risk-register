@@ -12,6 +12,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -124,5 +125,35 @@ class RiskControllerIntegrationTest {
                 .andExpect(jsonPath("$.id").value(savedRisk.getId()))
                 .andExpect(jsonPath("$.title").value("Vendor outage"))
                 .andExpect(jsonPath("$.inherentScore").value(12));
+    }
+
+    @Test
+    void updatesAnExistingRisk() throws Exception {
+        Risk savedRisk = riskRepository.saveAndFlush(new Risk(
+                "Vendor outage",
+                "A critical vendor may become unavailable.",
+                RiskCategory.OPERATIONAL,
+                "Operations team",
+                3,
+                4
+        ));
+
+        mockMvc.perform(put("/api/risks/{id}", savedRisk.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title": "Primary vendor outage",
+                                  "description": "A critical vendor may become unavailable.",
+                                  "category": "OPERATIONAL",
+                                  "owner": "Operations team",
+                                  "likelihood": 4,
+                                  "impact": 4,
+                                  "status": "MITIGATING"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Primary vendor outage"))
+                .andExpect(jsonPath("$.status").value("MITIGATING"))
+                .andExpect(jsonPath("$.inherentScore").value(16));
     }
 }
