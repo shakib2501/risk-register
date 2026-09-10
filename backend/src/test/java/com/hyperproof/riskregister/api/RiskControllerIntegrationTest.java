@@ -65,4 +65,40 @@ class RiskControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].title").value("Unpatched production systems"));
     }
+
+    @Test
+    void returnsClearBadRequestMessagesForInvalidRiskInput() throws Exception {
+        mockMvc.perform(post("/api/risks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title": "Unpatched production systems",
+                                  "description": "Critical systems may miss security patches.",
+                                  "category": "SECURITY",
+                                  "owner": "Security team",
+                                  "likelihood": 0,
+                                  "impact": 5,
+                                  "status": "OPEN"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Likelihood must be between 1 and 5"));
+
+        mockMvc.perform(post("/api/risks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title": "Unpatched production systems",
+                                  "description": "Critical systems may miss security patches.",
+                                  "category": "SECURITY",
+                                  "owner": "Security team",
+                                  "likelihood": 4,
+                                  "impact": 5,
+                                  "status": "CLOSED"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message")
+                        .value("A risk cannot be closed without at least one mitigation"));
+    }
 }
