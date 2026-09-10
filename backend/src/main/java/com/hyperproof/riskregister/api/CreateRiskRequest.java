@@ -12,8 +12,12 @@ public record CreateRiskRequest(
         @NotBlank String description,
         @NotNull RiskCategory category,
         @NotBlank String owner,
-        @NotNull @Min(1) @Max(5) Integer likelihood,
-        @NotNull @Min(1) @Max(5) Integer impact,
+        @NotNull(message = "Likelihood is required")
+        @Min(value = 1, message = "Likelihood must be between 1 and 5")
+        @Max(value = 5, message = "Likelihood must be between 1 and 5") Integer likelihood,
+        @NotNull(message = "Impact is required")
+        @Min(value = 1, message = "Impact must be between 1 and 5")
+        @Max(value = 5, message = "Impact must be between 1 and 5") Integer impact,
         RiskStatus status
 ) {
 }
