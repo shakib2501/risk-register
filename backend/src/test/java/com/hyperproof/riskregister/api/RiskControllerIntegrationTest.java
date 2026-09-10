@@ -1,5 +1,8 @@
 package com.hyperproof.riskregister.api;
 
+import com.hyperproof.riskregister.risk.Risk;
+import com.hyperproof.riskregister.risk.RiskCategory;
+import com.hyperproof.riskregister.risk.RiskRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -18,6 +21,9 @@ class RiskControllerIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private RiskRepository riskRepository;
 
     @Test
     void createsRiskAndReturnsCalculatedScores() throws Exception {
@@ -100,5 +106,23 @@ class RiskControllerIntegrationTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message")
                         .value("A risk cannot be closed without at least one mitigation"));
+    }
+
+    @Test
+    void retrievesRiskById() throws Exception {
+        Risk savedRisk = riskRepository.saveAndFlush(new Risk(
+                "Vendor outage",
+                "A critical vendor may become unavailable.",
+                RiskCategory.OPERATIONAL,
+                "Operations team",
+                3,
+                4
+        ));
+
+        mockMvc.perform(get("/api/risks/{id}", savedRisk.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(savedRisk.getId()))
+                .andExpect(jsonPath("$.title").value("Vendor outage"))
+                .andExpect(jsonPath("$.inherentScore").value(12));
     }
 }
