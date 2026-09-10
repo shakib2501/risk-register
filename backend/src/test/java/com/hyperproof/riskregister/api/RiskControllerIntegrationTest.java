@@ -13,8 +13,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -155,5 +157,22 @@ class RiskControllerIntegrationTest {
                 .andExpect(jsonPath("$.title").value("Primary vendor outage"))
                 .andExpect(jsonPath("$.status").value("MITIGATING"))
                 .andExpect(jsonPath("$.inherentScore").value(16));
+    }
+
+    @Test
+    void deletesAnExistingRisk() throws Exception {
+        Risk savedRisk = riskRepository.saveAndFlush(new Risk(
+                "Vendor outage",
+                "A critical vendor may become unavailable.",
+                RiskCategory.OPERATIONAL,
+                "Operations team",
+                3,
+                4
+        ));
+
+        mockMvc.perform(delete("/api/risks/{id}", savedRisk.getId()))
+                .andExpect(status().isNoContent());
+
+        assertThat(riskRepository.findById(savedRisk.getId())).isEmpty();
     }
 }
