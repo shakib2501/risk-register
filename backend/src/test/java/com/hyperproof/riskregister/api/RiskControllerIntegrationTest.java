@@ -247,4 +247,26 @@ class RiskControllerIntegrationTest {
                 .andExpect(jsonPath("$.description").value("Deploy verified patching automation."))
                 .andExpect(jsonPath("$.effectiveness").value(5));
     }
+
+    @Test
+    void deletesAMitigationFromARisk() throws Exception {
+        Risk risk = new Risk(
+                "Unpatched production systems",
+                "Critical systems may miss security patches.",
+                RiskCategory.SECURITY,
+                "Security team",
+                4,
+                5
+        );
+        Mitigation mitigation = new Mitigation("Deploy patching automation.", 3);
+        risk.addMitigation(mitigation);
+        riskRepository.saveAndFlush(risk);
+
+        mockMvc.perform(delete("/api/risks/{riskId}/mitigations/{mitigationId}", risk.getId(), mitigation.getId()))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/risks/{id}/mitigations", risk.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isEmpty());
+    }
 }
