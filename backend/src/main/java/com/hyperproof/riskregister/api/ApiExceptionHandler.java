@@ -23,4 +23,10 @@ public class ApiExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ApiError(exception.getMessage()));
     }
+
+    @ExceptionHandler(RiskNotFoundException.class)
+    public ResponseEntity<ApiError> handleNotFound(RiskNotFoundException exception) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiError(exception.getMessage()));
+    }
 }

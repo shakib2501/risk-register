@@ -3,6 +3,7 @@ package com.hyperproof.riskregister.api;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -37,5 +38,10 @@ public class RiskController {
             @RequestParam(required = false) RiskStatus status
     ) {
         return riskService.list(category, status);
+    }
+
+    @GetMapping("/{id}")
+    public RiskResponse get(@PathVariable Long id) {
+        return riskService.get(id);
     }
 }
