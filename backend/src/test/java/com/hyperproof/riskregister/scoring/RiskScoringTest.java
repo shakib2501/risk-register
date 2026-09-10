@@ -17,4 +17,9 @@ class RiskScoringTest {
     void keepsInherentScoreWhenNoMitigationsExist() {
         assertThat(RiskScoring.residualScore(20, List.of())).isEqualTo(20);
     }
+
+    @Test
+    void reducesRiskWithAHighlyEffectiveMitigation() {
+        assertThat(RiskScoring.residualScore(20, List.of(5))).isEqualTo(4);
+    }
 }
