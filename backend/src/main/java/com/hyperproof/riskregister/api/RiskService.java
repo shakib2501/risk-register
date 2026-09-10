@@ -2,6 +2,7 @@ package com.hyperproof.riskregister.api;
 
 import com.hyperproof.riskregister.risk.Risk;
 import com.hyperproof.riskregister.risk.RiskCategory;
+import com.hyperproof.riskregister.risk.Mitigation;
 import com.hyperproof.riskregister.risk.RiskRepository;
 import com.hyperproof.riskregister.risk.RiskStatus;
 import com.hyperproof.riskregister.scoring.RiskScoring;
@@ -77,6 +78,14 @@ public class RiskService {
         Risk risk = riskRepository.findById(riskId)
                 .orElseThrow(() -> new RiskNotFoundException(riskId));
         riskRepository.delete(risk);
+    }
+
+    @Transactional
+    public RiskResponse addMitigation(Long riskId, CreateMitigationRequest request) {
+        Risk risk = riskRepository.findById(riskId)
+                .orElseThrow(() -> new RiskNotFoundException(riskId));
+        risk.addMitigation(new Mitigation(request.description(), request.effectiveness()));
+        return toResponse(risk);
     }
 
     private RiskResponse toResponse(Risk risk) {

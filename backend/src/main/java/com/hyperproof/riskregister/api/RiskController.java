@@ -57,4 +57,13 @@ public class RiskController {
     public void delete(@PathVariable Long id) {
         riskService.delete(id);
     }
+
+    @PostMapping("/{id}/mitigations")
+    @ResponseStatus(HttpStatus.CREATED)
+    public RiskResponse addMitigation(
+            @PathVariable Long id,
+            @Valid @RequestBody CreateMitigationRequest request
+    ) {
+        return riskService.addMitigation(id, request);
+    }
 }
