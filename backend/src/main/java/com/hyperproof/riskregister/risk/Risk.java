@@ -1,16 +1,21 @@
 package com.hyperproof.riskregister.risk;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 @Entity
 public class Risk {
@@ -48,7 +53,8 @@ public class Risk {
     @Column(nullable = false)
     private Instant updatedAt;
 
-    private int mitigationCount;
+    @OneToMany(mappedBy = "risk", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Mitigation> mitigations = new ArrayList<>();
 
     protected Risk() {
     }
@@ -62,12 +68,14 @@ public class Risk {
         this.impact = impact;
     }
 
-    public void addMitigation() {
-        mitigationCount++;
+    public void addMitigation(Mitigation mitigation) {
+        Mitigation nonNullMitigation = Objects.requireNonNull(mitigation, "Mitigation is required");
+        nonNullMitigation.setRisk(this);
+        mitigations.add(nonNullMitigation);
     }
 
     public void changeStatus(RiskStatus newStatus) {
-        if (newStatus == RiskStatus.CLOSED && mitigationCount == 0) {
+        if (newStatus == RiskStatus.CLOSED && mitigations.isEmpty()) {
             throw new IllegalStateException("A risk cannot be closed without at least one mitigation");
         }
 
@@ -108,5 +116,9 @@ public class Risk {
 
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    public int getMitigationCount() {
+        return mitigations.size();
     }
 }
