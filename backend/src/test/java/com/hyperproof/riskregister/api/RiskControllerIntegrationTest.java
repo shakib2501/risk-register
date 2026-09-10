@@ -175,4 +175,29 @@ class RiskControllerIntegrationTest {
 
         assertThat(riskRepository.findById(savedRisk.getId())).isEmpty();
     }
+
+    @Test
+    void addsAMitigationAndRecalculatesResidualRisk() throws Exception {
+        Risk savedRisk = riskRepository.saveAndFlush(new Risk(
+                "Unpatched production systems",
+                "Critical systems may miss security patches.",
+                RiskCategory.SECURITY,
+                "Security team",
+                4,
+                5
+        ));
+
+        mockMvc.perform(post("/api/risks/{id}/mitigations", savedRisk.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "description": "Deploy weekly patching automation.",
+                                  "effectiveness": 5
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.mitigationCount").value(1))
+                .andExpect(jsonPath("$.residualScore").value(4))
+                .andExpect(jsonPath("$.residualSeverity").value("LOW"));
+    }
 }
