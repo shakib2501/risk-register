@@ -269,4 +269,66 @@ class RiskControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isEmpty());
     }
+
+    @Test
+    void closesARiskAfterAMitigationIsAdded() throws Exception {
+        Risk savedRisk = riskRepository.saveAndFlush(new Risk(
+                "Unpatched production systems",
+                "Critical systems may miss security patches.",
+                RiskCategory.SECURITY,
+                "Security team",
+                4,
+                5
+        ));
+
+        mockMvc.perform(post("/api/risks/{id}/mitigations", savedRisk.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "description": "Deploy patching automation.",
+                                  "effectiveness": 4
+                                }
+                                """))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(put("/api/risks/{id}", savedRisk.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title": "Unpatched production systems",
+                                  "description": "Critical systems may miss security patches.",
+                                  "category": "SECURITY",
+                                  "owner": "Security team",
+                                  "likelihood": 4,
+                                  "impact": 5,
+                                  "status": "CLOSED"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CLOSED"));
+    }
+
+    @Test
+    void rejectsMitigationEffectivenessOutsideTheAllowedRange() throws Exception {
+        Risk savedRisk = riskRepository.saveAndFlush(new Risk(
+                "Unpatched production systems",
+                "Critical systems may miss security patches.",
+                RiskCategory.SECURITY,
+                "Security team",
+                4,
+                5
+        ));
+
+        mockMvc.perform(post("/api/risks/{id}/mitigations", savedRisk.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "description": "Deploy patching automation.",
+                                  "effectiveness": 6
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message")
+                        .value("Mitigation effectiveness must be between 1 and 5"));
+    }
 }
