@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 
@@ -43,5 +43,16 @@ describe('App', () => {
     expect(await screen.findByText('Unpatched production systems')).toBeInTheDocument()
     expect(screen.getByText('Residual: 4')).toBeInTheDocument()
     expect(fetch).toHaveBeenCalledWith('/api/risks')
+  })
+
+  it('opens the add risk form', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => [] }))
+    render(<App />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add risk' }))
+
+    expect(await screen.findByRole('heading', { name: 'Add a risk' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Title')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Save risk' })).toBeInTheDocument()
   })
 })
