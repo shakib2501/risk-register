@@ -14,6 +14,7 @@ public final class RiskScoring {
     }
 
     public static int residualScore(int inherentScore, List<Integer> mitigationEffectiveness) {
+        validateInherentScore(inherentScore);
         double remainingFraction = 1.0;
 
         for (Integer effectiveness : mitigationEffectiveness) {
@@ -27,6 +28,12 @@ public final class RiskScoring {
     private static void validateRating(int rating, String fieldName) {
         if (rating < 1 || rating > 5) {
             throw new IllegalArgumentException(fieldName + " must be between 1 and 5");
+        }
+    }
+
+    private static void validateInherentScore(int inherentScore) {
+        if (inherentScore < 1 || inherentScore > 25) {
+            throw new IllegalArgumentException("Inherent score must be between 1 and 25");
         }
     }
 }
