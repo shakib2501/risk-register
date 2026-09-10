@@ -55,4 +55,34 @@ describe('App', () => {
     expect(screen.getByLabelText('Title')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Save risk' })).toBeInTheDocument()
   })
+
+  it('creates a risk and adds it to the dashboard', async () => {
+    const createdRisk = {
+      id: 2,
+      title: 'Vendor outage',
+      category: 'OPERATIONAL',
+      owner: 'Operations team',
+      status: 'OPEN',
+      inherentScore: 12,
+      residualScore: 12,
+      residualSeverity: 'MEDIUM' as const,
+      mitigationCount: 0,
+    }
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => [] })
+      .mockResolvedValueOnce({ ok: true, json: async () => createdRisk })
+    vi.stubGlobal('fetch', fetchMock)
+    render(<App />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add risk' }))
+    await screen.findByRole('heading', { name: 'Add a risk' })
+    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Vendor outage' } })
+    fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'A critical vendor may become unavailable.' } })
+    fireEvent.change(screen.getByLabelText('Owner'), { target: { value: 'Operations team' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save risk' }))
+
+    expect(await screen.findByText('Vendor outage')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Add a risk' })).not.toBeInTheDocument()
+    expect(fetchMock).toHaveBeenLastCalledWith('/api/risks', expect.objectContaining({ method: 'POST' }))
+  })
 })
