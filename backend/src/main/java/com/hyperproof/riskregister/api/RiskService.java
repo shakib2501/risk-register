@@ -88,6 +88,20 @@ public class RiskService {
         return toResponse(risk);
     }
 
+    @Transactional(readOnly = true)
+    public List<MitigationResponse> listMitigations(Long riskId) {
+        Risk risk = riskRepository.findById(riskId)
+                .orElseThrow(() -> new RiskNotFoundException(riskId));
+        return risk.getMitigations().stream()
+                .map(mitigation -> new MitigationResponse(
+                        mitigation.getId(),
+                        mitigation.getDescription(),
+                        mitigation.getEffectiveness(),
+                        mitigation.getCreatedAt()
+                ))
+                .toList();
+    }
+
     private RiskResponse toResponse(Risk risk) {
         int inherentScore = RiskScoring.inherentScore(risk.getLikelihood(), risk.getImpact());
         List<Integer> effectivenessValues = risk.getMitigations().stream()

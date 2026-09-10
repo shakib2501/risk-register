@@ -66,4 +66,9 @@ public class RiskController {
     ) {
         return riskService.addMitigation(id, request);
     }
+
+    @GetMapping("/{id}/mitigations")
+    public List<MitigationResponse> listMitigations(@PathVariable Long id) {
+        return riskService.listMitigations(id);
+    }
 }

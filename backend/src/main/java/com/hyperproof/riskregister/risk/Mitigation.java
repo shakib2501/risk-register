@@ -52,7 +52,19 @@ public class Mitigation {
         return risk;
     }
 
+    public Long getId() {
+        return id;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
     public int getEffectiveness() {
         return effectiveness;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
     }
 }
