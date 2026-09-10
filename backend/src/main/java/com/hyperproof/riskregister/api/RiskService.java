@@ -102,6 +102,35 @@ public class RiskService {
                 .toList();
     }
 
+    @Transactional
+    public MitigationResponse updateMitigation(
+            Long riskId,
+            Long mitigationId,
+            CreateMitigationRequest request
+    ) {
+        Risk risk = riskRepository.findById(riskId)
+                .orElseThrow(() -> new RiskNotFoundException(riskId));
+        Mitigation mitigation = findMitigation(risk, mitigationId);
+        mitigation.update(request.description(), request.effectiveness());
+        return toResponse(mitigation);
+    }
+
+    private Mitigation findMitigation(Risk risk, Long mitigationId) {
+        return risk.getMitigations().stream()
+                .filter(mitigation -> mitigation.getId().equals(mitigationId))
+                .findFirst()
+                .orElseThrow(() -> new MitigationNotFoundException(mitigationId));
+    }
+
+    private MitigationResponse toResponse(Mitigation mitigation) {
+        return new MitigationResponse(
+                mitigation.getId(),
+                mitigation.getDescription(),
+                mitigation.getEffectiveness(),
+                mitigation.getCreatedAt()
+        );
+    }
+
     private RiskResponse toResponse(Risk risk) {
         int inherentScore = RiskScoring.inherentScore(risk.getLikelihood(), risk.getImpact());
         List<Integer> effectivenessValues = risk.getMitigations().stream()

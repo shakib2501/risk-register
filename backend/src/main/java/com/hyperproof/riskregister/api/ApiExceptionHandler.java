@@ -24,8 +24,8 @@ public class ApiExceptionHandler {
                 .body(new ApiError(exception.getMessage()));
     }
 
-    @ExceptionHandler(RiskNotFoundException.class)
-    public ResponseEntity<ApiError> handleNotFound(RiskNotFoundException exception) {
+    @ExceptionHandler({RiskNotFoundException.class, MitigationNotFoundException.class})
+    public ResponseEntity<ApiError> handleNotFound(RuntimeException exception) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ApiError(exception.getMessage()));
     }

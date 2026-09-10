@@ -71,4 +71,13 @@ public class RiskController {
     public List<MitigationResponse> listMitigations(@PathVariable Long id) {
         return riskService.listMitigations(id);
     }
+
+    @PutMapping("/{riskId}/mitigations/{mitigationId}")
+    public MitigationResponse updateMitigation(
+            @PathVariable Long riskId,
+            @PathVariable Long mitigationId,
+            @Valid @RequestBody CreateMitigationRequest request
+    ) {
+        return riskService.updateMitigation(riskId, mitigationId, request);
+    }
 }

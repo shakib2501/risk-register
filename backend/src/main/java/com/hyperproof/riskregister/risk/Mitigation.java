@@ -43,6 +43,11 @@ public class Mitigation {
         this.risk = risk;
     }
 
+    public void update(String description, int effectiveness) {
+        this.description = description;
+        this.effectiveness = effectiveness;
+    }
+
     @PrePersist
     void setCreatedAt() {
         createdAt = Instant.now();
