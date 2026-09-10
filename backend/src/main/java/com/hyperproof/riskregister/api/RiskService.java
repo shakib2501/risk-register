@@ -115,6 +115,13 @@ public class RiskService {
         return toResponse(mitigation);
     }
 
+    @Transactional
+    public void deleteMitigation(Long riskId, Long mitigationId) {
+        Risk risk = riskRepository.findById(riskId)
+                .orElseThrow(() -> new RiskNotFoundException(riskId));
+        risk.removeMitigation(findMitigation(risk, mitigationId));
+    }
+
     private Mitigation findMitigation(Risk risk, Long mitigationId) {
         return risk.getMitigations().stream()
                 .filter(mitigation -> mitigation.getId().equals(mitigationId))

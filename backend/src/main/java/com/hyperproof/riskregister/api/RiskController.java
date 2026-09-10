@@ -80,4 +80,10 @@ public class RiskController {
     ) {
         return riskService.updateMitigation(riskId, mitigationId, request);
     }
+
+    @DeleteMapping("/{riskId}/mitigations/{mitigationId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteMitigation(@PathVariable Long riskId, @PathVariable Long mitigationId) {
+        riskService.deleteMitigation(riskId, mitigationId);
+    }
 }

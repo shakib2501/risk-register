@@ -74,6 +74,10 @@ public class Risk {
         mitigations.add(nonNullMitigation);
     }
 
+    public void removeMitigation(Mitigation mitigation) {
+        mitigations.remove(mitigation);
+    }
+
     public void changeStatus(RiskStatus newStatus) {
         if (newStatus == RiskStatus.CLOSED && mitigations.isEmpty()) {
             throw new IllegalStateException("A risk cannot be closed without at least one mitigation");
