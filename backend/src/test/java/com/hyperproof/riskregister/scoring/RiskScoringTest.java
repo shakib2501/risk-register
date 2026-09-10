@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class RiskScoringTest {
 
@@ -21,5 +22,23 @@ class RiskScoringTest {
     @Test
     void reducesRiskWithAHighlyEffectiveMitigation() {
         assertThat(RiskScoring.residualScore(20, List.of(5))).isEqualTo(4);
+    }
+
+    @Test
+    void compoundsMultipleMitigationsAndNeverReturnsLessThanOne() {
+        assertThat(RiskScoring.residualScore(25, List.of(4, 3))).isEqualTo(5);
+        assertThat(RiskScoring.residualScore(25, List.of(5, 5))).isEqualTo(1);
+    }
+
+    @Test
+    void rejectsRatingsOutsideTheSupportedRange() {
+        assertThatThrownBy(() -> RiskScoring.inherentScore(0, 3))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> RiskScoring.inherentScore(3, 6))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> RiskScoring.residualScore(20, List.of(0)))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> RiskScoring.residualScore(20, List.of(6)))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }
