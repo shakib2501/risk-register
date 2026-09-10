@@ -19,10 +19,28 @@ class RiskTest {
     @Test
     void canCloseRiskAfterAMitigationIsAdded() {
         Risk risk = new Risk();
-        risk.addMitigation();
+        risk.addMitigation(new Mitigation("Documented control", 3));
 
         risk.changeStatus(RiskStatus.CLOSED);
 
         assertThat(risk.status()).isEqualTo(RiskStatus.CLOSED);
+    }
+
+    @Test
+    void associatesAMitigationWithItsRisk() {
+        Risk risk = new Risk(
+                "Data loss",
+                "A service outage may cause data loss.",
+                RiskCategory.OPERATIONAL,
+                "Platform team",
+                3,
+                4
+        );
+        Mitigation mitigation = new Mitigation("Automated backups", 4);
+
+        risk.addMitigation(mitigation);
+
+        assertThat(risk.getMitigationCount()).isEqualTo(1);
+        assertThat(mitigation.getRisk()).isSameAs(risk);
     }
 }
