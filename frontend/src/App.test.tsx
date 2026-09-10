@@ -7,12 +7,17 @@ afterEach(() => {
 })
 
 describe('App', () => {
-  it('shows an empty risk register dashboard', () => {
+  it('shows an empty risk register dashboard', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [],
+    }))
+
     render(<App />)
 
     expect(screen.getByRole('heading', { name: 'Risk Register' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Add risk' })).toBeInTheDocument()
-    expect(screen.getByText('No risks found. Add your first risk to begin tracking.')).toBeInTheDocument()
+    expect(await screen.findByText('No risks found. Add your first risk to begin tracking.')).toBeInTheDocument()
   })
 
   it('loads risks from the API', async () => {
