@@ -12,6 +12,12 @@ public final class RiskScoring {
     }
 
     public static int residualScore(int inherentScore, List<Integer> mitigationEffectiveness) {
-        return inherentScore;
+        double remainingFraction = 1.0;
+
+        for (Integer effectiveness : mitigationEffectiveness) {
+            remainingFraction *= (6.0 - effectiveness) / 6.0;
+        }
+
+        return Math.max(1, (int) Math.ceil(inherentScore * remainingFraction));
     }
 }
