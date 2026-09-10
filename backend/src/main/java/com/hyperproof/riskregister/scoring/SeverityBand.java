@@ -7,6 +7,9 @@ public enum SeverityBand {
     CRITICAL;
 
     public static SeverityBand fromScore(int score) {
+        if (score < 1 || score > 25) {
+            throw new IllegalArgumentException("Score must be between 1 and 25");
+        }
         if (score <= 5) {
             return LOW;
         }
