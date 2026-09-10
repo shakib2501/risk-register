@@ -82,6 +82,26 @@ public class Risk {
         status = newStatus;
     }
 
+    public void update(
+            String title,
+            String description,
+            RiskCategory category,
+            String owner,
+            int likelihood,
+            int impact,
+            RiskStatus newStatus
+    ) {
+        if (newStatus != null) {
+            changeStatus(newStatus);
+        }
+        this.title = title;
+        this.description = description;
+        this.category = category;
+        this.owner = owner;
+        this.likelihood = likelihood;
+        this.impact = impact;
+    }
+
     public RiskStatus status() {
         return status;
     }

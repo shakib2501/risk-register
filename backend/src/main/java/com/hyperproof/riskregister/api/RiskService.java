@@ -56,6 +56,22 @@ public class RiskService {
         return toResponse(risk);
     }
 
+    @Transactional
+    public RiskResponse update(Long riskId, CreateRiskRequest request) {
+        Risk risk = riskRepository.findById(riskId)
+                .orElseThrow(() -> new RiskNotFoundException(riskId));
+        risk.update(
+                request.title(),
+                request.description(),
+                request.category(),
+                request.owner(),
+                request.likelihood(),
+                request.impact(),
+                request.status()
+        );
+        return toResponse(risk);
+    }
+
     private RiskResponse toResponse(Risk risk) {
         int inherentScore = RiskScoring.inherentScore(risk.getLikelihood(), risk.getImpact());
         List<Integer> effectivenessValues = risk.getMitigations().stream()

@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,5 +44,10 @@ public class RiskController {
     @GetMapping("/{id}")
     public RiskResponse get(@PathVariable Long id) {
         return riskService.get(id);
+    }
+
+    @PutMapping("/{id}")
+    public RiskResponse update(@PathVariable Long id, @Valid @RequestBody CreateRiskRequest request) {
+        return riskService.update(id, request);
     }
 }
