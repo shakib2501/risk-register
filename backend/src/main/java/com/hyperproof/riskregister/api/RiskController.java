@@ -3,6 +3,7 @@ package com.hyperproof.riskregister.api;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -49,5 +50,11 @@ public class RiskController {
     @PutMapping("/{id}")
     public RiskResponse update(@PathVariable Long id, @Valid @RequestBody CreateRiskRequest request) {
         return riskService.update(id, request);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        riskService.delete(id);
     }
 }

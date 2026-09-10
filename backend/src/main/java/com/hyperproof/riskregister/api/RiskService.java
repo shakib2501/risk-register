@@ -72,6 +72,13 @@ public class RiskService {
         return toResponse(risk);
     }
 
+    @Transactional
+    public void delete(Long riskId) {
+        Risk risk = riskRepository.findById(riskId)
+                .orElseThrow(() -> new RiskNotFoundException(riskId));
+        riskRepository.delete(risk);
+    }
+
     private RiskResponse toResponse(Risk risk) {
         int inherentScore = RiskScoring.inherentScore(risk.getLikelihood(), risk.getImpact());
         List<Integer> effectivenessValues = risk.getMitigations().stream()
