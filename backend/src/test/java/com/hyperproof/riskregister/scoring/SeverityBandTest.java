@@ -3,6 +3,7 @@ package com.hyperproof.riskregister.scoring;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class SeverityBandTest {
 
@@ -16,5 +17,13 @@ class SeverityBandTest {
         assertThat(SeverityBand.fromScore(19)).isEqualTo(SeverityBand.HIGH);
         assertThat(SeverityBand.fromScore(20)).isEqualTo(SeverityBand.CRITICAL);
         assertThat(SeverityBand.fromScore(25)).isEqualTo(SeverityBand.CRITICAL);
+    }
+
+    @Test
+    void rejectsScoresOutsideTheSupportedRange() {
+        assertThatThrownBy(() -> SeverityBand.fromScore(0))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> SeverityBand.fromScore(26))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }
