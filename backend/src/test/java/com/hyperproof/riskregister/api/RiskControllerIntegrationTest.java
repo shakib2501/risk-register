@@ -8,6 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -39,5 +40,29 @@ class RiskControllerIntegrationTest {
                 .andExpect(jsonPath("$.inherentScore").value(20))
                 .andExpect(jsonPath("$.residualScore").value(20))
                 .andExpect(jsonPath("$.residualSeverity").value("CRITICAL"));
+    }
+
+    @Test
+    void listsRisksFilteredByCategoryAndStatus() throws Exception {
+        mockMvc.perform(post("/api/risks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title": "Unpatched production systems",
+                                  "description": "Critical systems may miss security patches.",
+                                  "category": "SECURITY",
+                                  "owner": "Security team",
+                                  "likelihood": 4,
+                                  "impact": 5,
+                                  "status": "OPEN"
+                                }
+                                """))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/risks")
+                        .param("category", "SECURITY")
+                        .param("status", "OPEN"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].title").value("Unpatched production systems"));
     }
 }
