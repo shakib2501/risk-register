@@ -106,6 +106,26 @@ public class Risk {
         return title;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public RiskCategory getCategory() {
+        return category;
+    }
+
+    public String getOwner() {
+        return owner;
+    }
+
+    public int getLikelihood() {
+        return likelihood;
+    }
+
+    public int getImpact() {
+        return impact;
+    }
+
     public RiskStatus getStatus() {
         return status;
     }
@@ -120,5 +140,9 @@ public class Risk {
 
     public int getMitigationCount() {
         return mitigations.size();
+    }
+
+    public List<Mitigation> getMitigations() {
+        return List.copyOf(mitigations);
     }
 }

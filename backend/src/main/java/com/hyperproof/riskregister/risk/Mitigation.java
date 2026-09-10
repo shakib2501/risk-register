@@ -51,4 +51,8 @@ public class Mitigation {
     public Risk getRisk() {
         return risk;
     }
+
+    public int getEffectiveness() {
+        return effectiveness;
+    }
 }
