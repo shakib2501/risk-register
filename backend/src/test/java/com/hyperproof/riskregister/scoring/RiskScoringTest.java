@@ -41,4 +41,12 @@ class RiskScoringTest {
         assertThatThrownBy(() -> RiskScoring.residualScore(20, List.of(6)))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void rejectsInherentScoresOutsideTheSupportedRange() {
+        assertThatThrownBy(() -> RiskScoring.residualScore(0, List.of()))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> RiskScoring.residualScore(26, List.of()))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
 }
