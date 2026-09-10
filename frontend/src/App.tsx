@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { getRisks, type Risk } from './api'
+import { useEffect, useState, type FormEvent } from 'react'
+import { createRisk, getRisks, type Risk } from './api'
 import './App.css'
 
 function App() {
@@ -11,6 +11,25 @@ function App() {
   useEffect(() => {
     getRisks().then(setRisks).catch(() => setError('Unable to load risks. Please try again.')).finally(() => setLoading(false))
   }, [])
+
+  async function saveRisk(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const values = new FormData(event.currentTarget)
+    try {
+      const risk = await createRisk({
+        title: String(values.get('title')),
+        description: String(values.get('description')),
+        category: String(values.get('category')),
+        owner: String(values.get('owner')),
+        likelihood: Number(values.get('likelihood')),
+        impact: Number(values.get('impact')),
+      })
+      setRisks((currentRisks) => [risk, ...currentRisks])
+      setShowForm(false)
+    } catch {
+      setError('Unable to create risk. Please try again.')
+    }
+  }
 
   return (
     <main className="app-shell">
@@ -33,7 +52,7 @@ function App() {
       {showForm && <div className="modal-backdrop" role="presentation">
         <section className="risk-form" role="dialog" aria-modal="true" aria-labelledby="add-risk-heading">
           <div className="form-header"><h2 id="add-risk-heading">Add a risk</h2><button type="button" className="close-button" aria-label="Close form" onClick={() => setShowForm(false)}>×</button></div>
-          <form onSubmit={(event) => { event.preventDefault() }}>
+          <form onSubmit={saveRisk}>
             <label>Title<input name="title" required /></label>
             <label>Description<textarea name="description" required /></label>
             <label>Category<select name="category" defaultValue="OPERATIONAL"><option value="OPERATIONAL">Operational</option><option value="FINANCIAL">Financial</option><option value="COMPLIANCE">Compliance</option><option value="SECURITY">Security</option><option value="STRATEGIC">Strategic</option></select></label>
