@@ -1,6 +1,7 @@
 package com.hyperproof.riskregister.api;
 
 import com.hyperproof.riskregister.risk.Risk;
+import com.hyperproof.riskregister.risk.RiskCategory;
 import com.hyperproof.riskregister.risk.RiskRepository;
 import com.hyperproof.riskregister.risk.RiskStatus;
 import com.hyperproof.riskregister.scoring.RiskScoring;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Comparator;
 
 @Service
 public class RiskService {
@@ -35,6 +37,16 @@ public class RiskService {
         }
 
         return toResponse(riskRepository.save(risk));
+    }
+
+    @Transactional(readOnly = true)
+    public List<RiskResponse> list(RiskCategory category, RiskStatus status) {
+        return riskRepository.findAll().stream()
+                .filter(risk -> category == null || risk.getCategory() == category)
+                .filter(risk -> status == null || risk.getStatus() == status)
+                .map(this::toResponse)
+                .sorted(Comparator.comparingInt(RiskResponse::residualScore).reversed())
+                .toList();
     }
 
     private RiskResponse toResponse(Risk risk) {
