@@ -19,6 +19,32 @@ mvn "-Dmaven.repo.local=$env:USERPROFILE\.m2\repository" spring-boot:run
 
 The API starts at `http://localhost:8080`.
 
+## Run the frontend
+
+In a second PowerShell window:
+
+```powershell
+cd C:\Users\shaki\Documents\Projects\risk-register\frontend
+npm install
+npm run dev
+```
+
+Open `http://localhost:5173`. Vite proxies `/api` calls to the Spring Boot server, so keep both processes running. The frontend has its own checks:
+
+```powershell
+npm test
+npm run build
+```
+
+## User workflow
+
+- Add, edit, filter, and delete risks from the dashboard.
+- Select a risk to view its inherent and residual scores, severity bands, and mitigation count.
+- Add, edit, or delete mitigations from the risk detail panel.
+- A risk may be closed only after at least one mitigation exists; API validation messages are shown in the interface.
+
+H2 is an in-memory database, so data resets when the backend stops. This is intentional for the assignment's simple local setup.
+
 Run the tests with:
 
 ```powershell
