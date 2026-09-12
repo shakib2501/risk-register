@@ -41,7 +41,9 @@ describe('App', () => {
     render(<App />)
 
     expect(await screen.findByText('Unpatched production systems')).toBeInTheDocument()
+    expect(screen.getByText('Inherent: 20')).toBeInTheDocument()
     expect(screen.getByText('Residual: 4')).toBeInTheDocument()
+    expect(screen.getByText('1 mitigation')).toBeInTheDocument()
     expect(fetch).toHaveBeenCalledWith('/api/risks')
   })
 
@@ -54,6 +56,12 @@ describe('App', () => {
     expect(await screen.findByRole('heading', { name: 'Add a risk' })).toBeInTheDocument()
     expect(screen.getByLabelText('Title')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Save risk' })).toBeInTheDocument()
+    expect(screen.getByText('Live inherent score: 9')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Likelihood'), { target: { value: '4' } })
+    fireEvent.change(screen.getByLabelText('Impact'), { target: { value: '5' } })
+
+    expect(screen.getByText('Live inherent score: 20')).toBeInTheDocument()
   })
 
   it('creates a risk and adds it to the dashboard', async () => {
