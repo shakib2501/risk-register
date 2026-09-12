@@ -78,7 +78,7 @@ npm run build
 
 ## User workflow
 
-1. Select **Add risk** and enter its title, description, category, owner, likelihood, impact, and status.
+1. Select **Add risk** and enter its title, description, category, owner, likelihood, impact, and status. The form previews the inherent score live.
 2. Use the category/status selectors to focus the dashboard.
 3. Select a risk to inspect its score details and mitigation list.
 4. Add a mitigation with an effectiveness rating. Residual score updates from the API response.
