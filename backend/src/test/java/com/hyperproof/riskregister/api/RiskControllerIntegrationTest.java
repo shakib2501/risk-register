@@ -4,6 +4,7 @@ import com.hyperproof.riskregister.risk.Risk;
 import com.hyperproof.riskregister.risk.RiskCategory;
 import com.hyperproof.riskregister.risk.Mitigation;
 import com.hyperproof.riskregister.risk.RiskRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -28,6 +29,9 @@ class RiskControllerIntegrationTest {
 
     @Autowired
     private RiskRepository riskRepository;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Test
     void createsRiskAndReturnsCalculatedScores() throws Exception {
@@ -330,5 +334,43 @@ class RiskControllerIntegrationTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message")
                         .value("Mitigation effectiveness must be between 1 and 5"));
+    }
+
+    @Test
+    void createsMitigatesAndFetchesRiskThroughTheApi() throws Exception {
+        String createdRisk = mockMvc.perform(post("/api/risks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title": "Unpatched production systems",
+                                  "description": "Critical systems may miss security patches.",
+                                  "category": "SECURITY",
+                                  "owner": "Security team",
+                                  "likelihood": 4,
+                                  "impact": 5,
+                                  "status": "OPEN"
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        long riskId = objectMapper.readTree(createdRisk).path("id").asLong();
+
+        mockMvc.perform(post("/api/risks/{id}/mitigations", riskId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "description": "Deploy weekly patching automation.",
+                                  "effectiveness": 5
+                                }
+                                """))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/risks/{id}", riskId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.inherentScore").value(20))
+                .andExpect(jsonPath("$.residualScore").value(4))
+                .andExpect(jsonPath("$.mitigationCount").value(1));
     }
 }
