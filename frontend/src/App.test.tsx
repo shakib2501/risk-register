@@ -116,6 +116,8 @@ describe('App', () => {
     fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'Patching may be delayed.' } })
     fireEvent.change(screen.getByLabelText('Owner'), { target: { value: 'Security team' } })
     fireEvent.change(screen.getByLabelText('Initial mitigation description'), { target: { value: 'Deploy weekly patching automation.' } })
+    expect(within(screen.getByRole('dialog')).getByLabelText('Status')).toHaveValue('MITIGATING')
+    expect(within(screen.getByRole('dialog')).getByRole('option', { name: 'Open' })).toBeDisabled()
     expect(within(screen.getByRole('dialog')).getByRole('option', { name: 'Closed' })).not.toBeDisabled()
     fireEvent.change(within(screen.getByRole('dialog')).getByLabelText('Status'), { target: { value: 'CLOSED' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save risk' }))

@@ -27,6 +27,25 @@ class RiskTest {
     }
 
     @Test
+    void movesAnOpenRiskToMitigatingWhenAMitigationIsAdded() {
+        Risk risk = new Risk();
+
+        risk.addMitigation(new Mitigation("Documented control", 3));
+
+        assertThat(risk.status()).isEqualTo(RiskStatus.MITIGATING);
+    }
+
+    @Test
+    void cannotReopenARiskThatHasAMitigation() {
+        Risk risk = new Risk();
+        risk.addMitigation(new Mitigation("Documented control", 3));
+
+        assertThatThrownBy(() -> risk.changeStatus(RiskStatus.OPEN))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("A risk with mitigations cannot be open");
+    }
+
+    @Test
     void associatesAMitigationWithItsRisk() {
         Risk risk = new Risk(
                 "Data loss",

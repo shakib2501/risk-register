@@ -226,6 +226,7 @@ class RiskControllerIntegrationTest {
                                 }
                                 """))
                 .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("MITIGATING"))
                 .andExpect(jsonPath("$.mitigationCount").value(1))
                 .andExpect(jsonPath("$.residualScore").value(4))
                 .andExpect(jsonPath("$.residualSeverity").value("LOW"));
@@ -335,6 +336,36 @@ class RiskControllerIntegrationTest {
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CLOSED"));
+    }
+
+    @Test
+    void rejectsChangingAMitigatedRiskBackToOpen() throws Exception {
+        Risk risk = new Risk(
+                "Unpatched production systems",
+                "Critical systems may miss security patches.",
+                RiskCategory.SECURITY,
+                "Security team",
+                4,
+                5
+        );
+        risk.addMitigation(new Mitigation("Deploy patching automation.", 4));
+        Risk savedRisk = riskRepository.saveAndFlush(risk);
+
+        mockMvc.perform(put("/api/risks/{id}", savedRisk.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title": "Unpatched production systems",
+                                  "description": "Critical systems may miss security patches.",
+                                  "category": "SECURITY",
+                                  "owner": "Security team",
+                                  "likelihood": 4,
+                                  "impact": 5,
+                                  "status": "OPEN"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("A risk with mitigations cannot be open"));
     }
 
     @Test
