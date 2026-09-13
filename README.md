@@ -1,6 +1,6 @@
 # Risk Register
 
-A full-stack risk-register take-home project for recording risks, assessing their inherent and residual exposure, and tracking mitigations.
+A full-stack Risk Register for recording risks, assessing inherent and residual exposure, tracking mitigations, and keeping risk reviews current.
 
 The application uses a Java/Spring Boot API and a React/TypeScript client. Its Git history uses small `test:` then `feat:` commits to make the test-driven development process visible.
 
@@ -52,7 +52,7 @@ Start the backend:
 
 ```powershell
 cd backend
-mvn "-Dmaven.repo.local=$env:USERPROFILE\.m2\repository" spring-boot:run
+mvn spring-boot:run
 ```
 
 In the second PowerShell window, from the cloned repository root, start the frontend:
@@ -71,7 +71,7 @@ Backend tests:
 
 ```powershell
 cd backend
-mvn "-Dmaven.repo.local=$env:USERPROFILE\.m2\repository" test
+mvn test
 ```
 
 Frontend tests and production build:
@@ -137,25 +137,25 @@ For example, a risk with likelihood 4 and impact 5 has an inherent score of 20. 
 
 | Decision | Choice made | Why | Alternative and trade-off |
 | --- | --- | --- | --- |
-| Local database | H2 in-memory, in PostgreSQL compatibility mode | One-command setup and fast isolated tests; no database installation or Docker required for an evaluator. | PostgreSQL from day one provides realistic behaviour and durable data, but adds setup complexity. |
+| Local database | H2 in-memory, in PostgreSQL compatibility mode | One-command setup and fast isolated tests; no database installation or Docker required. | PostgreSQL from day one provides realistic behaviour and durable data, but adds setup complexity. |
 | Persistence abstraction | JPA/Spring Data repositories | Keeps the service layer independent of SQL and makes a later database switch small. | JDBC/jOOQ gives more explicit SQL and tuning control, at the cost of more persistence code. |
-| Production schema evolution | Hibernate `create-drop` for the assignment | Automatically creates a clean local schema. | Flyway + versioned SQL migrations is the production choice; it preserves and evolves real data. |
+| Production schema evolution | Hibernate `create-drop` for local development | Automatically creates a clean local schema. | Flyway + versioned SQL migrations is the production choice; it preserves and evolves real data. |
 | Backend structure | Controller, service, repository, entity layers | Makes HTTP concerns, business rules, and persistence independently testable. | Putting logic in controllers is quicker initially but becomes hard to reuse and test. |
 | Mitigation API shape | Nested under `/api/risks/{riskId}/mitigations` | The parent risk is explicit and accidental cross-risk updates are avoided. | Top-level `/api/mitigations` is useful for organisation-wide mitigation reporting, but requires ownership validation on every request. |
 | Risk score | Likelihood × impact, range 1–25 | Familiar risk-matrix calculation that is transparent to users and reviewers. | Weighted or additive models can express business priorities, but require agreed weighting policy. |
 | Mitigation calculation | Compound remaining-risk fractions | Multiple mitigations reduce the remaining exposure without allowing a simple fixed subtraction to overstate control impact. | Fixed score subtraction is easier to explain but treats mitigation effect unrealistically. |
 | Minimum residual | Score is never lower than 1 | A mitigation controls risk; it does not prove all risk disappeared. | Allowing 0 could represent fully eliminated risk if the organisation explicitly defines it that way. |
 | Status lifecycle rule | `Open` has no recorded mitigation; the first mitigation moves it to `Mitigating`; only mitigated risks can be `Closed` | Prevents the dashboard from showing an Open risk that already has a documented control. The rule is enforced in the domain model and reflected in the UI. | Allowing an Open risk to retain preventive controls is a valid alternative if the organisation treats status as an independent review state. |
-| Review-date indicator | The server calculates overdue status from an optional next review date | Keeps the date comparison consistent for every API client and makes stale risk reviews visible on the dashboard. | A scheduled notification job could send reminders, but is beyond the local assignment scope. |
-| Risk-detail interaction | A centered, scrollable detail dialog with dashboard actions in a native dropdown | Keeps users in context while making complete risk information and mitigation management immediately visible. | Route-based detail pages offer shareable URLs and browser-history support, but add routing state that is unnecessary for this compact assignment. |
+| Review-date indicator | The server calculates overdue status from an optional next review date | Keeps the date comparison consistent for every API client and makes stale risk reviews visible on the dashboard. | A scheduled notification job could send reminders, but is not included in this first version. |
+| Risk-detail interaction | A centered, scrollable detail dialog with dashboard actions in a native dropdown | Keeps users in context while making complete risk information and mitigation management immediately visible. | Route-based detail pages offer shareable URLs and browser-history support, but add routing state that is unnecessary for this focused application. |
 | Validation | Jakarta Bean Validation at the request boundary plus domain checks | Invalid input gets a clear 4xx response before persistence; domain rules still hold if code is reused elsewhere. | Database-only constraints protect data but produce less friendly API errors. |
 | Frontend tooling | React + TypeScript + Vite | Small, fast developer experience with type-safe API models and no unnecessary server framework. | Next.js is valuable when SSR, routing, or server components are needed; those add complexity here. |
 | Frontend/backend connection | Vite `/api` proxy in development | Avoids CORS setup locally and lets client code use stable relative URLs. | Configure CORS and use absolute API URLs; necessary for separate production deployments. |
 | Testing approach | Tests specified before feature behaviour in focused commits | Demonstrates TDD intent and keeps calculation and workflow rules safe during changes. | End-to-end-only testing gives stronger browser coverage but is slower and less precise for domain rules. |
 
-## Assignment-focused trade-offs
+## Trade-offs and future improvements
 
-This project intentionally does not add authentication/authorisation, pagination, audit history, file attachments, background jobs, Docker, or production deployment configuration. Those would be natural next steps for a production risk platform, but would distract from the assignment's core risk, mitigation, scoring, and testing requirements.
+This first version does not include authentication/authorisation, pagination, audit history, file attachments, background jobs, Docker, or production deployment configuration. Those are natural next steps for a production risk platform.
 
 Of the optional stretch goals, the next-review-date overdue indicator is implemented. Compliance-framework mappings and optimistic UI updates are intentionally left as future work. A production version would also add scheduled review reminders, durable PostgreSQL storage with Flyway migrations, and time-zone-aware review policy.
 
