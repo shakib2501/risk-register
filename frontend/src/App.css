@@ -28,8 +28,8 @@ h1 { margin-bottom: .65rem; color: #172033; font-size: clamp(2rem, 5vw, 3rem); l
 .severity-medium { background: #fef3c7; color: #92400e; }
 .severity-high { background: #ffedd5; color: #c2410c; }
 .severity-critical { background: #fee2e2; color: #b91c1c; }
-.modal-backdrop { position: fixed; inset: 0; z-index: 1; display: grid; place-items: center; background: rgb(23 32 51 / 48%); padding: 1rem; }
-.risk-form { width: min(600px, 100%); border-radius: 1rem; background: white; box-shadow: 0 22px 60px rgb(0 0 0 / 22%); padding: 1.5rem; }
+.modal-backdrop { position: fixed; inset: 0; z-index: 1; display: grid; place-items: center; overflow-y: auto; background: rgb(23 32 51 / 48%); padding: 1rem; }
+.risk-form { width: min(600px, 100%); max-height: calc(100vh - 2rem); overflow-y: auto; border-radius: 1rem; background: white; box-shadow: 0 22px 60px rgb(0 0 0 / 22%); padding: 1.5rem; }
 .form-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
 .form-header h2 { margin: 0; }
 .close-button { border: 0; background: transparent; color: #62708a; cursor: pointer; font-size: 1.7rem; line-height: 1; }
