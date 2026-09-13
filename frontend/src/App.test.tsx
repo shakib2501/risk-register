@@ -54,6 +54,7 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add risk' }))
 
     expect(await screen.findByRole('heading', { name: 'Add a risk' })).toBeInTheDocument()
+    expect(screen.getByText('* Required fields')).toBeInTheDocument()
     expect(screen.getByLabelText('Title')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Save risk' })).toBeInTheDocument()
     expect(screen.getByText('Live inherent score: 9')).toBeInTheDocument()
