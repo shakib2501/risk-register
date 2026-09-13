@@ -2,7 +2,7 @@
 
 A full-stack Risk Register for recording risks, assessing inherent and residual exposure, tracking mitigations, and keeping risk reviews current.
 
-The application uses a Java/Spring Boot API and a React/TypeScript client. Its Git history uses small `test:` then `feat:` commits to make the test-driven development process visible.
+The application uses a Java/Spring Boot API and a React/TypeScript client. The test-driven development process visible via commit history.
 
 ## What it does
 
@@ -39,7 +39,7 @@ The backend follows `controller -> service -> repository -> entity` boundaries. 
 - Maven 3.9+
 - Node.js 22 LTS and npm
 
-## Reviewer quick start
+## Quick Start
 
 Clone the repository and open two PowerShell windows:
 
