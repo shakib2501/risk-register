@@ -8,7 +8,8 @@ const statuses: RiskStatus[] = ['OPEN', 'MITIGATING', 'CLOSED']
 function App() {
   const [risks, setRisks] = useState<Risk[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [dashboardError, setDashboardError] = useState('')
+  const [toastMessage, setToastMessage] = useState('')
   const [category, setCategory] = useState('')
   const [status, setStatus] = useState('')
   const [formRisk, setFormRisk] = useState<Risk | null | undefined>(undefined)
@@ -21,7 +22,7 @@ function App() {
   const filteredRisks = useMemo(() => risks.filter((risk) => (!category || risk.category === category) && (!status || risk.status === status)), [risks, category, status])
 
   async function loadRisks() {
-    try { setRisks(await getRisks()) } catch (reason) { setError(messageOf(reason)) } finally { setLoading(false) }
+    try { setRisks(await getRisks()) } catch (reason) { setDashboardError(messageOf(reason)) } finally { setLoading(false) }
   }
 
   useEffect(() => { void loadRisks() }, [])
@@ -40,7 +41,7 @@ function App() {
 
   async function selectRisk(risk: Risk) {
     setSelectedRisk(risk)
-    try { setMitigations(await getMitigations(risk.id)) } catch (reason) { setError(messageOf(reason)) }
+    try { setMitigations(await getMitigations(risk.id)) } catch (reason) { setToastMessage(messageOf(reason)) }
   }
 
   async function saveRisk(event: FormEvent<HTMLFormElement>) {
@@ -57,8 +58,8 @@ function App() {
       setRisks((current) => formRisk ? current.map((risk) => risk.id === saved.id ? saved : risk) : [saved, ...current])
       if (selectedRisk?.id === saved.id) setSelectedRisk(saved)
       setFormRisk(undefined)
-      setError('')
-    } catch (reason) { setError(messageOf(reason)) }
+      setToastMessage('')
+    } catch (reason) { setToastMessage(messageOf(reason)) }
   }
 
   async function removeRisk(risk: Risk) {
@@ -67,7 +68,7 @@ function App() {
       await deleteRisk(risk.id)
       setRisks((current) => current.filter((item) => item.id !== risk.id))
       if (selectedRisk?.id === risk.id) { setSelectedRisk(null); setMitigations([]) }
-    } catch (reason) { setError(messageOf(reason)) }
+    } catch (reason) { setToastMessage(messageOf(reason)) }
   }
 
   async function saveMitigation(event: FormEvent<HTMLFormElement>) {
@@ -84,7 +85,7 @@ function App() {
       setMitigations(await getMitigations(savedRisk.id))
       event.currentTarget.reset()
       setEditingMitigation(null)
-    } catch (reason) { setError(messageOf(reason)) }
+    } catch (reason) { setToastMessage(messageOf(reason)) }
   }
 
   async function removeMitigation(mitigationId: number) {
@@ -96,17 +97,18 @@ function App() {
       setRisks(freshRisks)
       if (refreshedRisk) setSelectedRisk(refreshedRisk)
       setMitigations(await getMitigations(selectedRisk.id))
-    } catch (reason) { setError(messageOf(reason)) }
+    } catch (reason) { setToastMessage(messageOf(reason)) }
   }
 
   return <main className="app-shell">
     <header className="page-header"><div><p className="eyebrow">Governance workspace</p><h1>Risk Register</h1><p className="subtitle">Track, assess, and mitigate the risks that matter.</p></div><button type="button" className="primary-button" onClick={openNewRisk}>Add risk</button></header>
+    {toastMessage && <div className="toast" role="alert"><span>{toastMessage}</span><button type="button" aria-label="Dismiss notification" onClick={() => setToastMessage('')}>×</button></div>}
     <section className="risk-panel" aria-labelledby="risk-list-heading">
       <div className="panel-heading"><div><h2 id="risk-list-heading">Risks</h2><p>Sorted by residual risk, highest first.</p></div><div className="filters"><label>Category<select aria-label="Filter by category" value={category} onChange={(event) => setCategory(event.target.value)}><option value="">All categories</option>{categories.map((item) => <option key={item} value={item}>{format(item)}</option>)}</select></label><label>Status<select aria-label="Filter by status" value={status} onChange={(event) => setStatus(event.target.value)}><option value="">All statuses</option>{statuses.map((item) => <option key={item} value={item}>{format(item)}</option>)}</select></label></div></div>
       {loading && <p className="state-message">Loading risks…</p>}
-      {error && <p className="state-message" role="alert">{error}</p>}
-      {!loading && !error && filteredRisks.length === 0 && <div className="empty-state"><h3>No risks found</h3><p>No risks found. Add your first risk to begin tracking.</p></div>}
-      {!loading && !error && filteredRisks.length > 0 && <div className="risk-list">{filteredRisks.map((risk) => <article className="risk-row" key={risk.id}><button type="button" className="risk-summary" onClick={() => void selectRisk(risk)}><span><strong>{risk.title}</strong><small>{format(risk.category)} · {risk.owner} · {format(risk.status)}</small><small>{risk.mitigationCount} {risk.mitigationCount === 1 ? 'mitigation' : 'mitigations'}</small></span><span className="risk-score"><strong>Inherent: {risk.inherentScore}</strong><span className={`severity severity-${risk.inherentSeverity?.toLowerCase()}`}>{format(risk.inherentSeverity ?? risk.residualSeverity)}</span><strong>Residual: {risk.residualScore}</strong><span className={`severity severity-${risk.residualSeverity.toLowerCase()}`}>{format(risk.residualSeverity)}</span></span></button><div className="row-actions"><button type="button" onClick={() => openEditRisk(risk)}>Edit</button><button type="button" className="danger-button" onClick={() => void removeRisk(risk)}>Delete</button></div></article>)}</div>}
+      {dashboardError && <p className="state-message" role="alert">{dashboardError}</p>}
+      {!loading && !dashboardError && filteredRisks.length === 0 && <div className="empty-state"><h3>No risks found</h3><p>No risks found. Add your first risk to begin tracking.</p></div>}
+      {!loading && !dashboardError && filteredRisks.length > 0 && <div className="risk-list">{filteredRisks.map((risk) => <article className="risk-row" key={risk.id}><button type="button" className="risk-summary" onClick={() => void selectRisk(risk)}><span><strong>{risk.title}</strong><small>{format(risk.category)} · {risk.owner} · {format(risk.status)}</small><small>{risk.mitigationCount} {risk.mitigationCount === 1 ? 'mitigation' : 'mitigations'}</small></span><span className="risk-score"><strong>Inherent: {risk.inherentScore}</strong><span className={`severity severity-${risk.inherentSeverity?.toLowerCase()}`}>{format(risk.inherentSeverity ?? risk.residualSeverity)}</span><strong>Residual: {risk.residualScore}</strong><span className={`severity severity-${risk.residualSeverity.toLowerCase()}`}>{format(risk.residualSeverity)}</span></span></button><div className="row-actions"><button type="button" onClick={() => openEditRisk(risk)}>Edit</button><button type="button" className="danger-button" onClick={() => void removeRisk(risk)}>Delete</button></div></article>)}</div>}
     </section>
     {selectedRisk && <section className="detail-panel" aria-labelledby="risk-detail-heading"><div className="detail-heading"><div><p className="eyebrow">Risk details</p><h2 id="risk-detail-heading">{selectedRisk.title}</h2><p>{selectedRisk.description}</p></div><button type="button" className="secondary-button" onClick={() => setSelectedRisk(null)}>Close details</button></div><div className="metrics"><div><span>Inherent</span><strong>{selectedRisk.inherentScore}</strong><small>{format(selectedRisk.inherentSeverity)}</small></div><div><span>Residual</span><strong>{selectedRisk.residualScore}</strong><small>{format(selectedRisk.residualSeverity)}</small></div><div><span>Mitigations</span><strong>{selectedRisk.mitigationCount}</strong></div></div><div className="mitigation-section"><h3>Mitigations</h3>{mitigations.length === 0 ? <p className="muted">No mitigations recorded yet.</p> : <ul className="mitigation-list">{mitigations.map((mitigation) => <li key={mitigation.id}><span><strong>{mitigation.description}</strong><small>Effectiveness: {mitigation.effectiveness}/5</small></span><span><button type="button" onClick={() => setEditingMitigation(mitigation)}>Edit</button><button type="button" className="danger-button" onClick={() => void removeMitigation(mitigation.id)}>Delete</button></span></li>)}</ul>}<form key={editingMitigation?.id ?? 'new'} className="mitigation-form" onSubmit={saveMitigation}><label>Description<input name="mitigationDescription" defaultValue={editingMitigation?.description} required /></label><label>Effectiveness<select name="effectiveness" defaultValue={editingMitigation?.effectiveness ?? 3}>{[1, 2, 3, 4, 5].map((value) => <option key={value}>{value}</option>)}</select></label><button type="submit" className="primary-button">{editingMitigation ? 'Update mitigation' : 'Add mitigation'}</button>{editingMitigation && <button type="button" className="secondary-button" onClick={() => setEditingMitigation(null)}>Cancel</button>}</form></div></section>}
     {formRisk !== undefined && <div className="modal-backdrop" role="presentation"><section className="risk-form" role="dialog" aria-modal="true" aria-labelledby="risk-form-heading"><div className="form-header"><h2 id="risk-form-heading">{formRisk ? 'Edit risk' : 'Add a risk'}</h2><button type="button" className="close-button" aria-label="Close form" onClick={() => setFormRisk(undefined)}>×</button></div><form key={formRisk?.id ?? 'new'} onSubmit={saveRisk}><label>Title<input name="title" defaultValue={formRisk?.title} required /></label><label>Description<textarea name="description" defaultValue={formRisk?.description} required /></label><label>Category<select name="category" defaultValue={formRisk?.category ?? 'OPERATIONAL'}>{categories.map((item) => <option key={item} value={item}>{format(item)}</option>)}</select></label><label>Owner<input name="owner" defaultValue={formRisk?.owner} required /></label><div className="form-grid"><label>Likelihood<select name="likelihood" value={formLikelihood} onChange={(event) => setFormLikelihood(Number(event.target.value))}>{[1, 2, 3, 4, 5].map((value) => <option key={value}>{value}</option>)}</select></label><label>Impact<select name="impact" value={formImpact} onChange={(event) => setFormImpact(Number(event.target.value))}>{[1, 2, 3, 4, 5].map((value) => <option key={value}>{value}</option>)}</select></label></div><p className="live-score">Live inherent score: {formLikelihood * formImpact}</p><label>Status<select name="status" defaultValue={formRisk?.status ?? 'OPEN'}>{statuses.map((item) => <option key={item} value={item}>{format(item)}</option>)}</select></label><div className="form-actions"><button type="button" className="secondary-button" onClick={() => setFormRisk(undefined)}>Cancel</button><button type="submit" className="primary-button">Save risk</button></div></form></section></div>}

@@ -7,6 +7,8 @@ h1 { margin-bottom: .65rem; color: #172033; font-size: clamp(2rem, 5vw, 3rem); l
 .subtitle { margin-bottom: 0; }
 .primary-button { border: 0; border-radius: .55rem; background: #4f46e5; color: white; cursor: pointer; font: inherit; font-weight: 700; padding: .78rem 1.05rem; }
 .primary-button:hover { background: #4338ca; }
+.toast { position: fixed; top: 1rem; left: 50%; z-index: 2; display: flex; width: min(620px, calc(100% - 2rem)); align-items: center; justify-content: space-between; gap: 1rem; transform: translateX(-50%); border: 1px solid #fdba74; border-radius: .65rem; background: #fff7ed; box-shadow: 0 10px 30px rgb(23 32 51 / 18%); color: #9a3412; font-weight: 700; padding: .8rem 1rem; }
+.toast button { border: 0; background: transparent; color: inherit; cursor: pointer; font-size: 1.25rem; line-height: 1; }
 .risk-panel { overflow: hidden; border: 1px solid #dfe5f0; border-radius: 1rem; background: white; box-shadow: 0 10px 35px rgb(23 32 51 / 7%); }
 .panel-heading { display: flex; justify-content: space-between; border-bottom: 1px solid #e9edf4; padding: 1.4rem 1.5rem; }
 .panel-heading h2 { margin-bottom: .35rem; color: #172033; font-size: 1.15rem; }
