@@ -10,7 +10,7 @@ The application uses a Java/Spring Boot API and a React/TypeScript client. Its G
 - Records risk category, owner, likelihood, impact, and lifecycle status.
 - Calculates inherent and residual scores and their severity bands.
 - Creates, views, updates, and deletes mitigations per risk.
-- Prevents closing a risk until it has at least one mitigation.
+- Moves a risk to Mitigating when its first mitigation is recorded; mitigated risks cannot be Open, and only mitigated risks can be Closed.
 - Validates all 1–5 ratings and returns clear API error messages.
 - Sorts the API risk dashboard by residual score, highest first.
 
@@ -78,11 +78,11 @@ npm run build
 
 ## User workflow
 
-1. Select **Add risk** and enter its title, description, category, owner, likelihood, impact, and status. The form previews the inherent score live.
+1. Select **Add risk** and enter its title, description, category, owner, likelihood, impact, and status. The form previews the inherent score live. An initial mitigation is optional; entering one automatically changes the status to **Mitigating**, and then permits **Closed**.
 2. Use the category/status selectors to focus the dashboard.
 3. Select a risk to inspect its score details and mitigation list.
 4. Add a mitigation with an effectiveness rating. Residual score updates from the API response.
-5. Edit/delete either resource as needed. Closing a risk without mitigation is rejected with a readable explanation.
+5. Edit/delete either resource as needed. A mitigation moves an Open risk to **Mitigating**; a mitigated risk cannot be set back to **Open**, and closing without a mitigation is rejected with a readable explanation.
 
 ## Risk model and scoring
 
@@ -138,7 +138,7 @@ For example, a risk with likelihood 4 and impact 5 has an inherent score of 20. 
 | Risk score | Likelihood × impact, range 1–25 | Familiar risk-matrix calculation that is transparent to users and reviewers. | Weighted or additive models can express business priorities, but require agreed weighting policy. |
 | Mitigation calculation | Compound remaining-risk fractions | Multiple mitigations reduce the remaining exposure without allowing a simple fixed subtraction to overstate control impact. | Fixed score subtraction is easier to explain but treats mitigation effect unrealistically. |
 | Minimum residual | Score is never lower than 1 | A mitigation controls risk; it does not prove all risk disappeared. | Allowing 0 could represent fully eliminated risk if the organisation explicitly defines it that way. |
-| Closure rule | At least one mitigation required before `Closed` | Encodes the stated governance decision in one central domain rule. | A warning-only workflow is more flexible but cannot enforce the control. |
+| Status lifecycle rule | `Open` has no recorded mitigation; the first mitigation moves it to `Mitigating`; only mitigated risks can be `Closed` | Prevents the dashboard from showing an Open risk that already has a documented control. The rule is enforced in the domain model and reflected in the UI. | Allowing an Open risk to retain preventive controls is a valid alternative if the organisation treats status as an independent review state. |
 | Validation | Jakarta Bean Validation at the request boundary plus domain checks | Invalid input gets a clear 4xx response before persistence; domain rules still hold if code is reused elsewhere. | Database-only constraints protect data but produce less friendly API errors. |
 | Frontend tooling | React + TypeScript + Vite | Small, fast developer experience with type-safe API models and no unnecessary server framework. | Next.js is valuable when SSR, routing, or server components are needed; those add complexity here. |
 | Frontend/backend connection | Vite `/api` proxy in development | Avoids CORS setup locally and lets client code use stable relative URLs. | Configure CORS and use absolute API URLs; necessary for separate production deployments. |

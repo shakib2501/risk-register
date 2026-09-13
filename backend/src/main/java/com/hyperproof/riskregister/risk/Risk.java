@@ -72,6 +72,9 @@ public class Risk {
         Mitigation nonNullMitigation = Objects.requireNonNull(mitigation, "Mitigation is required");
         nonNullMitigation.setRisk(this);
         mitigations.add(nonNullMitigation);
+        if (status == RiskStatus.OPEN) {
+            status = RiskStatus.MITIGATING;
+        }
     }
 
     public void removeMitigation(Mitigation mitigation) {
@@ -81,6 +84,9 @@ public class Risk {
     public void changeStatus(RiskStatus newStatus) {
         if (newStatus == RiskStatus.CLOSED && mitigations.isEmpty()) {
             throw new IllegalStateException("A risk cannot be closed without at least one mitigation");
+        }
+        if (newStatus == RiskStatus.OPEN && !mitigations.isEmpty()) {
+            throw new IllegalStateException("A risk with mitigations cannot be open");
         }
 
         status = newStatus;
