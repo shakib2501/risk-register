@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Comparator;
+import java.time.LocalDate;
 
 @Service
 public class RiskService {
@@ -30,7 +31,8 @@ public class RiskService {
                 request.category(),
                 request.owner(),
                 request.likelihood(),
-                request.impact()
+                request.impact(),
+                request.nextReviewDate()
         );
 
         if (request.initialMitigation() != null) {
@@ -75,7 +77,8 @@ public class RiskService {
                 request.owner(),
                 request.likelihood(),
                 request.impact(),
-                request.status()
+                request.status(),
+                request.nextReviewDate()
         );
         return toResponse(risk);
     }
@@ -160,7 +163,9 @@ public class RiskService {
                 risk.getOwner(),
                 risk.getLikelihood(),
                 risk.getImpact(),
+                risk.getNextReviewDate(),
                 risk.getStatus(),
+                risk.isReviewOverdue(LocalDate.now()),
                 inherentScore,
                 residualScore,
                 SeverityBand.fromScore(inherentScore),

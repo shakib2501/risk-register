@@ -4,11 +4,11 @@ export type Severity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
 
 export type Risk = {
   id: number; title: string; description: string; category: RiskCategory; owner: string
-  likelihood: number; impact: number; status: RiskStatus; inherentScore: number; residualScore: number
+  likelihood: number; impact: number; nextReviewDate?: string; status: RiskStatus; overdue: boolean; inherentScore: number; residualScore: number
   inherentSeverity: Severity; residualSeverity: Severity; mitigationCount: number
 }
 
-export type RiskInput = Omit<Risk, 'id' | 'inherentScore' | 'residualScore' | 'inherentSeverity' | 'residualSeverity' | 'mitigationCount'>
+export type RiskInput = Omit<Risk, 'id' | 'overdue' | 'inherentScore' | 'residualScore' | 'inherentSeverity' | 'residualSeverity' | 'mitigationCount'>
 export type Mitigation = { id: number; description: string; effectiveness: number }
 export type MitigationInput = Omit<Mitigation, 'id'>
 export type CreateRiskInput = RiskInput & { initialMitigation?: MitigationInput }

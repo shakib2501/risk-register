@@ -5,6 +5,7 @@ import com.hyperproof.riskregister.risk.RiskStatus;
 import com.hyperproof.riskregister.scoring.SeverityBand;
 
 import java.time.Instant;
+import java.time.LocalDate;
 
 public record RiskResponse(
         Long id,
@@ -14,7 +15,9 @@ public record RiskResponse(
         String owner,
         int likelihood,
         int impact,
+        LocalDate nextReviewDate,
         RiskStatus status,
+        boolean overdue,
         int inherentScore,
         int residualScore,
         SeverityBand inherentSeverity,

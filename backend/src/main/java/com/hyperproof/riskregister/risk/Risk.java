@@ -13,6 +13,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -43,6 +44,8 @@ public class Risk {
     @Column(nullable = false)
     private int impact;
 
+    private LocalDate nextReviewDate;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RiskStatus status = RiskStatus.OPEN;
@@ -60,12 +63,25 @@ public class Risk {
     }
 
     public Risk(String title, String description, RiskCategory category, String owner, int likelihood, int impact) {
+        this(title, description, category, owner, likelihood, impact, null);
+    }
+
+    public Risk(
+            String title,
+            String description,
+            RiskCategory category,
+            String owner,
+            int likelihood,
+            int impact,
+            LocalDate nextReviewDate
+    ) {
         this.title = title;
         this.description = description;
         this.category = category;
         this.owner = owner;
         this.likelihood = likelihood;
         this.impact = impact;
+        this.nextReviewDate = nextReviewDate;
     }
 
     public void addMitigation(Mitigation mitigation) {
@@ -99,7 +115,8 @@ public class Risk {
             String owner,
             int likelihood,
             int impact,
-            RiskStatus newStatus
+            RiskStatus newStatus,
+            LocalDate nextReviewDate
     ) {
         if (newStatus != null) {
             changeStatus(newStatus);
@@ -110,6 +127,7 @@ public class Risk {
         this.owner = owner;
         this.likelihood = likelihood;
         this.impact = impact;
+        this.nextReviewDate = nextReviewDate;
     }
 
     public RiskStatus status() {
@@ -154,6 +172,14 @@ public class Risk {
 
     public int getImpact() {
         return impact;
+    }
+
+    public LocalDate getNextReviewDate() {
+        return nextReviewDate;
+    }
+
+    public boolean isReviewOverdue(LocalDate referenceDate) {
+        return nextReviewDate != null && nextReviewDate.isBefore(referenceDate);
     }
 
     public RiskStatus getStatus() {

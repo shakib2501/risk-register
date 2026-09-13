@@ -8,6 +8,7 @@ The application uses a Java/Spring Boot API and a React/TypeScript client. Its G
 
 - Creates, views, updates, filters, and deletes risks.
 - Records risk category, owner, likelihood, impact, and lifecycle status.
+- Supports an optional next review date and highlights risks whose review is overdue.
 - Calculates inherent and residual scores and their severity bands.
 - Creates, views, updates, and deletes mitigations per risk.
 - Moves a risk to Mitigating when its first mitigation is recorded; mitigated risks cannot be Open, and only mitigated risks can be Closed.
@@ -38,51 +39,56 @@ The backend follows `controller -> service -> repository -> entity` boundaries. 
 - Maven 3.9+
 - Node.js 22 LTS and npm
 
-## Run locally
+## Reviewer quick start
 
-Start the backend in one PowerShell window:
+Clone the repository and open two PowerShell windows:
 
 ```powershell
-cd C:\Users\shaki\Documents\Projects\risk-register\backend
+git clone https://github.com/shakib2501/risk-register.git
+cd risk-register
+```
+
+Start the backend:
+
+```powershell
+cd backend
 mvn "-Dmaven.repo.local=$env:USERPROFILE\.m2\repository" spring-boot:run
 ```
 
-Start the frontend in another:
+In the second PowerShell window, from the cloned repository root, start the frontend:
 
 ```powershell
-cd C:\Users\shaki\Documents\Projects\risk-register\frontend
+cd frontend
 npm install
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173). Keep both processes running: Vite sends `/api` calls to Spring Boot on port 8080.
-
-H2 is in-memory, so application data resets when the backend stops.
+Open [http://localhost:5173](http://localhost:5173). Keep both processes running: Vite sends `/api` calls to Spring Boot on port 8080. H2 is in-memory, so application data resets when the backend stops.
 
 ## Verify the project
 
 Backend tests:
 
 ```powershell
-cd C:\Users\shaki\Documents\Projects\risk-register\backend
+cd backend
 mvn "-Dmaven.repo.local=$env:USERPROFILE\.m2\repository" test
 ```
 
 Frontend tests and production build:
 
 ```powershell
-cd C:\Users\shaki\Documents\Projects\risk-register\frontend
+cd frontend
 npm test
 npm run build
 ```
 
 ## User workflow
 
-1. Select **Add risk** and enter its title, description, category, owner, likelihood, impact, and status. The form previews the inherent score live. An initial mitigation is optional; entering one automatically changes the status to **Mitigating**, and then permits **Closed**.
-2. Use the category/status selectors to focus the dashboard.
-3. Select a risk to inspect its score details and mitigation list.
-4. Add a mitigation with an effectiveness rating. Residual score updates from the API response.
-5. Edit/delete either resource as needed. A mitigation moves an Open risk to **Mitigating**; a mitigated risk cannot be set back to **Open**, and closing without a mitigation is rejected with a readable explanation.
+1. Select **Add risk** and enter title, description, category, owner, likelihood, impact, optional next review date, and status. The form previews inherent score live.
+2. Optionally record an initial mitigation. It automatically changes status to **Mitigating** and makes **Closed** available.
+3. Use dashboard filters, click a risk to open its detail dialog, or use its **Actions** dropdown to add a mitigation, edit, or delete.
+4. The detail dialog displays all risk fields, scores, overdue-review state, and mitigations. Its actions add mitigation, edit the risk, or delete it.
+5. A mitigation moves an Open risk to **Mitigating**; a mitigated risk cannot be set back to **Open**; closing without a mitigation is rejected with a readable explanation.
 
 ## Risk model and scoring
 
@@ -93,6 +99,7 @@ Each risk contains:
 | Category | Operational, Financial, Compliance, Security, Strategic |
 | Status | Open, Mitigating, Closed |
 | Likelihood and impact | Integer ratings from 1 to 5 |
+| Next review date | Optional ISO date; dates before today are marked overdue |
 | Mitigation | Description and effectiveness rating from 1 to 5 |
 
 ```text
@@ -139,6 +146,8 @@ For example, a risk with likelihood 4 and impact 5 has an inherent score of 20. 
 | Mitigation calculation | Compound remaining-risk fractions | Multiple mitigations reduce the remaining exposure without allowing a simple fixed subtraction to overstate control impact. | Fixed score subtraction is easier to explain but treats mitigation effect unrealistically. |
 | Minimum residual | Score is never lower than 1 | A mitigation controls risk; it does not prove all risk disappeared. | Allowing 0 could represent fully eliminated risk if the organisation explicitly defines it that way. |
 | Status lifecycle rule | `Open` has no recorded mitigation; the first mitigation moves it to `Mitigating`; only mitigated risks can be `Closed` | Prevents the dashboard from showing an Open risk that already has a documented control. The rule is enforced in the domain model and reflected in the UI. | Allowing an Open risk to retain preventive controls is a valid alternative if the organisation treats status as an independent review state. |
+| Review-date indicator | The server calculates overdue status from an optional next review date | Keeps the date comparison consistent for every API client and makes stale risk reviews visible on the dashboard. | A scheduled notification job could send reminders, but is beyond the local assignment scope. |
+| Risk-detail interaction | A centered, scrollable detail dialog with dashboard actions in a native dropdown | Keeps users in context while making complete risk information and mitigation management immediately visible. | Route-based detail pages offer shareable URLs and browser-history support, but add routing state that is unnecessary for this compact assignment. |
 | Validation | Jakarta Bean Validation at the request boundary plus domain checks | Invalid input gets a clear 4xx response before persistence; domain rules still hold if code is reused elsewhere. | Database-only constraints protect data but produce less friendly API errors. |
 | Frontend tooling | React + TypeScript + Vite | Small, fast developer experience with type-safe API models and no unnecessary server framework. | Next.js is valuable when SSR, routing, or server components are needed; those add complexity here. |
 | Frontend/backend connection | Vite `/api` proxy in development | Avoids CORS setup locally and lets client code use stable relative URLs. | Configure CORS and use absolute API URLs; necessary for separate production deployments. |
@@ -148,8 +157,10 @@ For example, a risk with likelihood 4 and impact 5 has an inherent score of 20. 
 
 This project intentionally does not add authentication/authorisation, pagination, audit history, file attachments, background jobs, Docker, or production deployment configuration. Those would be natural next steps for a production risk platform, but would distract from the assignment's core risk, mitigation, scoring, and testing requirements.
 
+Of the optional stretch goals, the next-review-date overdue indicator is implemented. Compliance-framework mappings and optimistic UI updates are intentionally left as future work. A production version would also add scheduled review reminders, durable PostgreSQL storage with Flyway migrations, and time-zone-aware review policy.
+
 The UI uses native browser confirmation for destructive actions to keep the client dependency-free. A production version would normally use a reusable accessible confirmation dialog and provide optimistic updates/retries where appropriate.
 
 ## TDD evidence
 
-The commit history contains paired `test:` and `feat:` commits for scoring rules, severity bands, risk closure rules, persistence, REST endpoints, mitigation endpoints, and the client risk-creation workflow. Tests cover unit-level scoring and domain behaviour, JPA persistence, Spring MVC API integration, and React component behaviour.
+The commit history contains paired `test:` and `feat:` commits for scoring rules, severity bands, risk closure rules, persistence, REST endpoints, mitigation endpoints, review-date handling, and client workflows. Tests cover unit-level scoring and domain behaviour, JPA persistence, Spring MVC API integration, and React component behaviour.
