@@ -57,6 +57,27 @@ class RiskControllerIntegrationTest {
     }
 
     @Test
+    void marksARiskWithAPastReviewDateAsOverdue() throws Exception {
+        mockMvc.perform(post("/api/risks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title": "Unpatched production systems",
+                                  "description": "Critical systems may miss security patches.",
+                                  "category": "SECURITY",
+                                  "owner": "Security team",
+                                  "likelihood": 4,
+                                  "impact": 5,
+                                  "nextReviewDate": "2000-01-01",
+                                  "status": "OPEN"
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.nextReviewDate").value("2000-01-01"))
+                .andExpect(jsonPath("$.overdue").value(true));
+    }
+
+    @Test
     void createsAClosedRiskWithAnInitialMitigation() throws Exception {
         mockMvc.perform(post("/api/risks")
                         .contentType(MediaType.APPLICATION_JSON)

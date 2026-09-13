@@ -56,6 +56,7 @@ describe('App', () => {
     expect(await screen.findByRole('heading', { name: 'Add a risk' })).toBeInTheDocument()
     expect(document.querySelector('.required-legend')).not.toBeInTheDocument()
     expect(screen.getByLabelText('Title')).toBeInTheDocument()
+    expect(screen.getByLabelText('Next review date')).toBeInTheDocument()
     expect(screen.getByRole('group', { name: 'Initial mitigation (optional)' })).toBeInTheDocument()
     expect(within(screen.getByRole('dialog')).getByRole('option', { name: 'Closed' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Save risk' })).toBeInTheDocument()
@@ -95,6 +96,22 @@ describe('App', () => {
     expect(await screen.findByText('Vendor outage')).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Add a risk' })).not.toBeInTheDocument()
     expect(fetchMock).toHaveBeenLastCalledWith('/api/risks', expect.objectContaining({ method: 'POST' }))
+  })
+
+  it('shows an overdue indicator on a risk that needs review', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [{
+        id: 9, title: 'Overdue risk', category: 'COMPLIANCE', owner: 'Compliance team', status: 'OPEN',
+        likelihood: 3, impact: 4, inherentScore: 12, residualScore: 12,
+        inherentSeverity: 'MEDIUM', residualSeverity: 'MEDIUM', mitigationCount: 0,
+        nextReviewDate: '2000-01-01', overdue: true,
+      }],
+    }))
+    render(<App />)
+
+    expect(await screen.findByText('Overdue risk')).toBeInTheDocument()
+    expect(screen.getByText('Overdue review')).toBeInTheDocument()
   })
 
   it('creates a closed risk with an optional initial mitigation', async () => {
@@ -188,12 +205,71 @@ describe('App', () => {
     render(<App />)
 
     await screen.findByText('Unmitigated risk')
-    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+    fireEvent.change(screen.getByLabelText('Actions for Unmitigated risk'), { target: { value: 'EDIT' } })
 
     expect(await screen.findByText('Add a mitigation before closing this risk.')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Add mitigation first' }))
 
     expect(await screen.findByRole('heading', { name: 'Unmitigated risk' })).toBeInTheDocument()
     expect(screen.getByText('No mitigations recorded yet.')).toBeInTheDocument()
+  })
+
+  it('opens a risk details panel from its add mitigation action', async () => {
+    const risk = {
+      id: 8,
+      title: 'Third-party outage',
+      description: 'A supplier may become unavailable.',
+      category: 'OPERATIONAL' as const,
+      owner: 'Operations team',
+      status: 'OPEN' as const,
+      likelihood: 3, impact: 4, inherentScore: 12, residualScore: 12,
+      inherentSeverity: 'MEDIUM' as const, residualSeverity: 'MEDIUM' as const, mitigationCount: 0,
+    }
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => [risk] })
+      .mockResolvedValueOnce({ ok: true, json: async () => [] })
+    vi.stubGlobal('fetch', fetchMock)
+    render(<App />)
+
+    expect(await screen.findByText('Third-party outage')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Actions for Third-party outage'), { target: { value: 'ADD_MITIGATION' } })
+
+    expect(await screen.findByRole('heading', { name: 'Third-party outage' })).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'Third-party outage' })).toBeInTheDocument()
+    expect(screen.getByText('Owner: Operations team')).toBeInTheDocument()
+    expect(screen.getByText('Likelihood: 3')).toBeInTheDocument()
+    expect(screen.getByText('Impact: 4')).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: 'Add mitigation' })).toHaveLength(2)
+    expect(screen.getByRole('button', { name: 'Edit risk' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Delete risk' })).toBeInTheDocument()
+    expect(fetchMock).toHaveBeenLastCalledWith('/api/risks/8/mitigations')
+  })
+
+  it('adds a mitigation without showing an error toast', async () => {
+    const risk = {
+      id: 10, title: 'Patch management', description: 'Patches may be delayed.', category: 'SECURITY' as const,
+      owner: 'Security team', status: 'OPEN' as const, likelihood: 4, impact: 5,
+      inherentScore: 20, residualScore: 20, inherentSeverity: 'CRITICAL' as const,
+      residualSeverity: 'CRITICAL' as const, mitigationCount: 0, overdue: false,
+    }
+    const mitigatedRisk = { ...risk, status: 'MITIGATING' as const, residualScore: 10, residualSeverity: 'MEDIUM' as const, mitigationCount: 1 }
+    const mitigation = { id: 1, description: 'Automate patch deployment.', effectiveness: 3 }
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => [risk] })
+      .mockResolvedValueOnce({ ok: true, json: async () => [] })
+      .mockResolvedValueOnce({ ok: true, json: async () => mitigatedRisk })
+      .mockResolvedValueOnce({ ok: true, json: async () => [mitigation] })
+    vi.stubGlobal('fetch', fetchMock)
+    render(<App />)
+
+    await screen.findByText('Patch management')
+    fireEvent.click(screen.getByRole('button', { name: /Patch management/ }))
+    await screen.findByRole('dialog', { name: 'Patch management' })
+    fireEvent.change(screen.getByLabelText('Description'), { target: { value: mitigation.description } })
+    fireEvent.submit(screen.getByLabelText('Description').closest('form')!)
+
+    expect(await screen.findByText(mitigation.description)).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(fetchMock).toHaveBeenCalledWith('/api/risks/10/mitigations', expect.objectContaining({ method: 'POST' }))
   })
 })
