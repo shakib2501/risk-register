@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 
@@ -92,5 +92,41 @@ describe('App', () => {
     expect(await screen.findByText('Vendor outage')).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Add a risk' })).not.toBeInTheDocument()
     expect(fetchMock).toHaveBeenLastCalledWith('/api/risks', expect.objectContaining({ method: 'POST' }))
+  })
+
+  it('shows a save error as a toast without hiding the dashboard', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [{
+          id: 1,
+          title: 'Existing risk',
+          category: 'SECURITY',
+          owner: 'Security team',
+          status: 'OPEN',
+          inherentScore: 20,
+          residualScore: 20,
+          residualSeverity: 'CRITICAL',
+          mitigationCount: 0,
+        }],
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ message: 'A risk cannot be closed without at least one mitigation' }),
+      })
+    vi.stubGlobal('fetch', fetchMock)
+    render(<App />)
+
+    expect(await screen.findByText('Existing risk')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Add risk' }))
+    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'New closed risk' } })
+    fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'A description.' } })
+    fireEvent.change(screen.getByLabelText('Owner'), { target: { value: 'Risk owner' } })
+    fireEvent.change(within(screen.getByRole('dialog')).getByLabelText('Status'), { target: { value: 'CLOSED' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save risk' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('A risk cannot be closed without at least one mitigation')
+    expect(screen.getByText('Existing risk')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Add a risk' })).toBeInTheDocument()
   })
 })
