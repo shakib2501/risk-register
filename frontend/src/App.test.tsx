@@ -129,4 +129,36 @@ describe('App', () => {
     expect(screen.getByText('Existing risk')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Add a risk' })).toBeInTheDocument()
   })
+
+  it('opens risk details to add a mitigation before closing an unmitigated risk', async () => {
+    const risk = {
+      id: 7,
+      title: 'Unmitigated risk',
+      description: 'Needs a control before it can close.',
+      category: 'SECURITY',
+      owner: 'Security team',
+      status: 'OPEN',
+      likelihood: 4,
+      impact: 5,
+      inherentScore: 20,
+      residualScore: 20,
+      inherentSeverity: 'CRITICAL',
+      residualSeverity: 'CRITICAL',
+      mitigationCount: 0,
+    }
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => [risk] })
+      .mockResolvedValueOnce({ ok: true, json: async () => [] })
+    vi.stubGlobal('fetch', fetchMock)
+    render(<App />)
+
+    await screen.findByText('Unmitigated risk')
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+
+    expect(await screen.findByText('Add a mitigation before closing this risk.')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Add mitigation first' }))
+
+    expect(await screen.findByRole('heading', { name: 'Unmitigated risk' })).toBeInTheDocument()
+    expect(screen.getByText('No mitigations recorded yet.')).toBeInTheDocument()
+  })
 })
