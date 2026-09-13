@@ -11,6 +11,7 @@ export type Risk = {
 export type RiskInput = Omit<Risk, 'id' | 'inherentScore' | 'residualScore' | 'inherentSeverity' | 'residualSeverity' | 'mitigationCount'>
 export type Mitigation = { id: number; description: string; effectiveness: number }
 export type MitigationInput = Omit<Mitigation, 'id'>
+export type CreateRiskInput = RiskInput & { initialMitigation?: MitigationInput }
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await (options ? fetch(url, options) : fetch(url))
@@ -23,7 +24,7 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
 }
 
 export const getRisks = () => request<Risk[]>('/api/risks')
-export const createRisk = (risk: RiskInput) => request<Risk>('/api/risks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(risk) })
+export const createRisk = (risk: CreateRiskInput) => request<Risk>('/api/risks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(risk) })
 export const updateRisk = (id: number, risk: RiskInput) => request<Risk>(`/api/risks/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(risk) })
 export const deleteRisk = (id: number) => request<void>(`/api/risks/${id}`, { method: 'DELETE' })
 export const getMitigations = (riskId: number) => request<Mitigation[]>(`/api/risks/${riskId}/mitigations`)

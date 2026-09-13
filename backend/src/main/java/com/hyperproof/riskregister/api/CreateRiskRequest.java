@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.Valid;
 
 public record CreateRiskRequest(
         @NotBlank String title,
@@ -18,6 +19,7 @@ public record CreateRiskRequest(
         @NotNull(message = "Impact is required")
         @Min(value = 1, message = "Impact must be between 1 and 5")
         @Max(value = 5, message = "Impact must be between 1 and 5") Integer impact,
-        RiskStatus status
+        RiskStatus status,
+        @Valid CreateMitigationRequest initialMitigation
 ) {
 }

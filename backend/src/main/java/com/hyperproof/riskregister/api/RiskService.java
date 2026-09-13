@@ -33,6 +33,13 @@ public class RiskService {
                 request.impact()
         );
 
+        if (request.initialMitigation() != null) {
+            risk.addMitigation(new Mitigation(
+                    request.initialMitigation().description(),
+                    request.initialMitigation().effectiveness()
+            ));
+        }
+
         if (request.status() != null && request.status() != RiskStatus.OPEN) {
             risk.changeStatus(request.status());
         }
