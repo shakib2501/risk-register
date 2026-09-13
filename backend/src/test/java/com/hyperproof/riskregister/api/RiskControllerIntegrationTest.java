@@ -57,6 +57,31 @@ class RiskControllerIntegrationTest {
     }
 
     @Test
+    void createsAClosedRiskWithAnInitialMitigation() throws Exception {
+        mockMvc.perform(post("/api/risks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title": "Unpatched production systems",
+                                  "description": "Critical systems may miss security patches.",
+                                  "category": "SECURITY",
+                                  "owner": "Security team",
+                                  "likelihood": 4,
+                                  "impact": 5,
+                                  "status": "CLOSED",
+                                  "initialMitigation": {
+                                    "description": "Deploy weekly patching automation.",
+                                    "effectiveness": 5
+                                  }
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("CLOSED"))
+                .andExpect(jsonPath("$.mitigationCount").value(1))
+                .andExpect(jsonPath("$.residualScore").value(4));
+    }
+
+    @Test
     void listsRisksFilteredByCategoryAndStatus() throws Exception {
         mockMvc.perform(post("/api/risks")
                         .contentType(MediaType.APPLICATION_JSON)
